@@ -13,31 +13,46 @@ function getStep(totalstep, duration, t, dt, timing) {
 
 function Movement(el, duration, delay) {
   this[0] = el;
-  this.to = 500;
-  this.tox = 0;
+  this.to = 100;
+  this.tox = 200;
   this.duration = duration || 1000; // milliseconds
   this.delay = delay || 0; // milliseconds
   this.y = 0;
   this.x = 500;
-  this.direction = this.to > this.y;
+  this.yDirection = this.to > this.y;
+  this.xDirection = this.tox > this.x;
 }
 
-Movement.prototype.moveTo = function (y) {
-  const offsetY = this.direction ? y : this.y - y;
-  this[0].style.transform = "translate3d(0, " + offsetY + "px, 0)";
+Movement.prototype.moveTo = function (y, x) {
+  const offsetY = this.yDirection ? y : this.y - y;
+  const offsetX = this.xDirection ? x : this.x - x;
+  console.log("x");
+  this[0].style.transform =
+    "translate3d(" + offsetX + "px, " + offsetY + "px, 0)";
 };
 
 Movement.prototype.update = function (t, dt) {
-  var to = this.direction ? this.to : this.y,
+  var to = this.yDirection ? this.to : this.y,
+    tox = this.xDirection ? this.tox : this.x,
     duration = this.duration,
     delay = this.delay,
-    y = this.direction ? this.y : this.to;
+    x = this.xDirection ? this.x : this.tox,
+    y = this.yDirection ? this.y : this.to;
 
   t -= delay;
 
   if (t >= 0) {
     y += getStep(
-      this.direction ? this.to : this.y,
+      this.yDirection ? this.to : this.y,
+      this.duration,
+      t,
+      dt,
+      function (t) {
+        return 2 * t;
+      }
+    );
+    x += getStep(
+      this.xDirection ? this.tox : this.x,
       this.duration,
       t,
       dt,
@@ -46,16 +61,21 @@ Movement.prototype.update = function (t, dt) {
       }
     );
     y = Math.min(y, to);
-    if (this.direction) {
+    x = Math.min(x, tox);
+    if (this.yDirection) {
       this.y = y;
     } else {
       this.to = y;
     }
-
-    this.moveTo(y);
+    if (this.xDirection) {
+      this.x = x;
+    } else {
+      this.tox = x;
+    }
+    this.moveTo(y, x);
   }
 
-  return y < to;
+  return y < to || x < tox;
 };
 
 movements.update = function (t, dt) {
