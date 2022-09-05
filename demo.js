@@ -13,32 +13,44 @@ function getStep(totalstep, duration, t, dt, timing) {
 
 function Movement(el, duration, delay) {
   this[0] = el;
-
   this.to = 500;
+  this.tox = 0;
   this.duration = duration || 1000; // milliseconds
   this.delay = delay || 0; // milliseconds
   this.y = 0;
+  this.x = 500;
+  this.direction = this.to > this.y;
 }
 
 Movement.prototype.moveTo = function (y) {
-  this[0].style.transform = "translate3d(0, " + y + "px, 0)";
+  const offsetY = this.direction ? y : this.y - y;
+  this[0].style.transform = "translate3d(0, " + offsetY + "px, 0)";
 };
 
 Movement.prototype.update = function (t, dt) {
-  var to = this.to,
+  var to = this.direction ? this.to : this.y,
     duration = this.duration,
     delay = this.delay,
-    y = this.y;
+    y = this.direction ? this.y : this.to;
 
   t -= delay;
 
   if (t >= 0) {
-    y += getStep(this.to, this.duration, t, dt, function (t) {
-      return 2 * t;
-    });
+    y += getStep(
+      this.direction ? this.to : this.y,
+      this.duration,
+      t,
+      dt,
+      function (t) {
+        return 2 * t;
+      }
+    );
     y = Math.min(y, to);
-
-    this.y = y;
+    if (this.direction) {
+      this.y = y;
+    } else {
+      this.to = y;
+    }
 
     this.moveTo(y);
   }
